@@ -2,6 +2,10 @@
 /////////////////////////////////////////////////////////////////////
 // SingletonLogger.h - Provides logging to multiple streams        //
 // ver 1.1                                                         //
+// --------------------------------------------------------------- //
+// copyright © Jim Fawcett, 2012                                   //
+// All rights granted provided that this notice is retained        //
+// --------------------------------------------------------------- //
 // Jim Fawcett, CSE687 - Object Oriented Design, Fall 2018         //
 /////////////////////////////////////////////////////////////////////
 /*

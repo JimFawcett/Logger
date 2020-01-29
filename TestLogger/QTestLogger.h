@@ -59,6 +59,27 @@
 
 namespace Test {
 
+  /*-----------------------------------------------------------------
+    The pragma below disables a warning about inheriting by dominance. 
+    This code is correct. It uses multiple inheritance of classes 
+    sharing a common base class.  The base classes here both derive
+    from ITestLogger.  The code uses virtual inheritance to avoid
+    duplicating that root base in QTestLogger.
+
+    Normally I would avoid this structure needing virtual inheritance,
+    but it is important that users of QTestLogger get full access to
+    all its operations via the interface IQTestLogger, so IQTestLogger 
+    needs to inherit from ITestLogger, as does TestLogger.
+
+    QTestLogger implements IQTestLogger and inherits from TestLogger
+    to share TestLogger's implementation.
+
+    IQTestLogger inherits ITestLogger to provide access to all logger ops.
+       ITestLogger is a shared root base class
+    TestLogger implements ITestLogger to provide access to TestLogger ops.
+  */
+#pragma warning(disable : 4250)
+
   /////////////////////////////////////////////////////////
   // QTestLogger class
 
@@ -74,14 +95,9 @@ namespace Test {
     virtual void start();
     virtual void stop();
     virtual double elapsedMicroseconds();
-    virtual void addStream(std::ostream* pOstream) override;
-    virtual bool removeStream(std::ostream* pStrm) override;
     virtual void clear() override;
-    virtual size_t streamCount() override;
     virtual void post(const T& msg) override;
     virtual void postDated(const T& msg) override;
-    virtual void setPrefix(const std::string& prefix) override;
-    virtual void setSuffix(const std::string& suffix) override;
   protected:
     void corePost(const T& msg);
     std::thread wthread;
@@ -117,21 +133,6 @@ namespace Test {
   template<typename T>
   double QTestLogger<T>::elapsedMicroseconds() {
     return this->dt.elapsedMicroseconds();
-  }
-
-  template<typename T>
-  void QTestLogger<T>::addStream(std::ostream* pOstream) {
-    TestLogger<T>::addStream(pOstream);
-  }
-
-  template<typename T>
-  bool QTestLogger<T>::removeStream(std::ostream* pStrm) {
-    return TestLogger<T>::removeStream(pStrm);
-  }
-  /*-- return number of open log channels --*/
-  template<typename T>
-  size_t QTestLogger<T>::streamCount() {
-    return TestLogger<T>::streamCount();
   }
   /*-- remove all streams, reset prefix and suffix --*/
   template<typename T>
@@ -170,16 +171,6 @@ namespace Test {
   void QTestLogger<T>::postDated(const T& msg) {
     this->composite_ = msg + " : " + this->dt.now();
     corePost(this->composite_);
-  }
-  /*-- set prefix applied to all messages --*/
-  template<typename T>
-  void QTestLogger<T>::setPrefix(const std::string& prefix) {
-    TestLogger<T>::setPrefix(prefix);
-  }
-  /*-- set suffix applied to all messages --*/
-  template<typename T>
-  void QTestLogger<T>::setSuffix(const std::string& suffix) {
-    TestLogger<T>::setSuffix(suffix);
   }
 
   /////////////////////////////////////////////////

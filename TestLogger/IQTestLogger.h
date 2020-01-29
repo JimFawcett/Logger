@@ -9,9 +9,13 @@
 #include <string>
 #include "ITestLogger.h"
 
+///////////////////////////////////////////////////////////
+// IQTestLogger<T>
+// - note virtual public inheritance
+
 namespace Test {
   template<typename T = std::string>
-  struct IQTestLogger : public ITestLogger<T> {
+  struct IQTestLogger : virtual public ITestLogger<T> {
     virtual ~IQTestLogger() {};
     virtual void wait() = 0;
     virtual void start() = 0;

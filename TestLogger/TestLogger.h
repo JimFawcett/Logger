@@ -50,9 +50,10 @@
 namespace Test {
   /////////////////////////////////////////////////////////
   // TestLogger class
+  // - note virtual public inheritance
 
   template<typename T = std::string>
-  class TestLogger : public ITestLogger<T> {
+  class TestLogger : virtual public ITestLogger<T> {
   public:
     using Streams = std::vector<std::ostream*>;
 

@@ -1,0 +1,4 @@
+
+  logging to std::cout and file test.log : Tue Jan 28 17:35:49 2020
+  end of test log
+  posting after leaving addStream scope

@@ -2,6 +2,10 @@
 /////////////////////////////////////////////////////////////////////
 // DateTime.h - represents clock time                              //
 // ver 1.1                                                         //
+// --------------------------------------------------------------- //
+// copyright © Jim Fawcett, 2012                                   //
+// All rights granted provided that this notice is retained        //
+// --------------------------------------------------------------- //
 // Jim Fawcett, CSE687 - Object Oriented Design, Spring 2017       //
 /////////////////////////////////////////////////////////////////////
 /*
@@ -37,20 +41,13 @@ namespace Utilities
   {
   public:
     using SysClock = std::chrono::system_clock;
-    using HiResClock = std::chrono::high_resolution_clock;
     using TimePoint = std::chrono::system_clock::time_point;
-    using HiResTimePoint = HiResClock::time_point;
     using Duration = std::chrono::system_clock::duration;
 
     DateTime();
     DateTime(std::string dtStr);
     DateTime(const TimePoint& tp);
     operator std::string();
-
-    void start();
-    void stop();
-    double elapsedMicroseconds();
-    double elapsedMilliseconds();
 
     std::string now();
     TimePoint timepoint();
@@ -81,12 +78,9 @@ namespace Utilities
     size_t hour();
     size_t minute();
     size_t second();
+  private:
     char* ctime(const std::time_t* pTime);
     std::tm* localtime(const time_t* pTime);
-  private:
     TimePoint tp_;
-    HiResTimePoint start_;
-    HiResTimePoint end_;
-    bool running_ = false;
   };
 }

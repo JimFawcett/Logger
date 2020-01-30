@@ -1,2 +1,12 @@
 
   posting after leaving addStream with unique_ptr scope
+  
+-- show logger type --
+  N = 0, L = Level::all
+
+  
+-- use factory and interface --
+  
+  Testing QLogger
+ =================
+  -- logging to std::cout --

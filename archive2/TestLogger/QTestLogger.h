@@ -10,8 +10,8 @@
    Package provides IQTestLogger interface, QTestLogger class, and two factories:
    - Write log messages to multiple streams
    - Accept strings or messages convertible to string
-   QTestLogger<N> posts to write queue.  Child thread deQs and writes to streams.
-   - QTestLogger<N> provides:
+   QTestLogger<T> posts to write queue.  Child thread deQs and writes to streams.
+   - QTestLogger<T> provides:
      - post(msg) and postDated(msg)
      - addStream(pStrm), removeStream(pStrm), streamCount()
      - clear()
@@ -83,16 +83,12 @@ namespace Test {
   /////////////////////////////////////////////////////////
   // QTestLogger class
 
-  template<size_t N = 0, Level L = Level::all>
-  class QTestLogger : public IQTestLogger<N,L>, public TestLogger<N,L> {
+  template<typename T = std::string>
+  class QTestLogger : public IQTestLogger<T>, public TestLogger<T> {
   public:
 
     QTestLogger() {
-      wthread = std::move(std::thread(&QTestLogger<N>::writeThreadProc, this));
-    }
-    QTestLogger(std::ostream& pStrm) {
-      wthread = std::move(std::thread(&QTestLogger<N>::writeThreadProc, this));
-      this->addStream(pStrm);
+      wthread = std::move(std::thread(&QTestLogger<T>::writeThreadProc, this));
     }
     virtual ~QTestLogger();
     virtual void wait();
@@ -100,100 +96,98 @@ namespace Test {
     virtual void stop();
     virtual double elapsedMicroseconds();
     virtual void clear() override;
-    virtual ITestLogger<N,L>& post(const std::string& msg) override;
-    virtual ITestLogger<N, L>& postDated(const std::string& msg) override;
+    virtual void post(const T& msg) override;
+    virtual void postDated(const T& msg) override;
   protected:
-    void corePost(const std::string& msg);
+    void corePost(const T& msg);
     std::thread wthread;
-    BlockingQueue<std::string> writeQ_;
+    BlockingQueue<T> writeQ_;
     void writeThreadProc();
   };
 
   /*-- remove all streams, closing file streams --*/
-  template<size_t N, Level L>
-  QTestLogger<N, L>::~QTestLogger() {
+  template<typename T>
+  QTestLogger<T>::~QTestLogger() {
     writeQ_.enQ("stop");
     if (wthread.joinable())
       wthread.join();
     clear();
   }
   /*-- wait for writeQ to empty --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::wait() {
+  template<typename T>
+  void QTestLogger<T>::wait() {
     while (writeQ_.size() > 0)
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   /*-- start timer --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::start() {
+  template<typename T>
+  void QTestLogger<T>::start() {
     this->dt.start();
   }
   /*-- stop timer --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::stop() {
+  template<typename T>
+  void QTestLogger<T>::stop() {
     this->dt.stop();
   }
   /*-- timer elapsed microseconds --*/
-  template<size_t N, Level L>
-  double QTestLogger<N, L>::elapsedMicroseconds() {
+  template<typename T>
+  double QTestLogger<T>::elapsedMicroseconds() {
     return this->dt.elapsedMicroseconds();
   }
   /*-- remove all streams, reset prefix and suffix --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::clear() {
+  template<typename T>
+  void QTestLogger<T>::clear() {
     wait();
-    for (auto pStrm : TestLogger<N>::streams_)
+    for (auto pStrm : TestLogger<T>::streams_)
       this->removeStream(pStrm);
-    TestLogger<N>::prefix_ = "\n  ";
-    TestLogger<N>::suffix_ = "";
+    TestLogger<T>::prefix_ = "\n  ";
+    TestLogger<T>::suffix_ = "";
   }
   /*-- function executed by write thread --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::writeThreadProc() {
+  template<typename T>
+  void QTestLogger<T>::writeThreadProc() {
     while (true) {
-      std::string msg = writeQ_.deQ();
+      T msg = writeQ_.deQ();
       if (msg == "stop")
         break;
-      for (auto pStrm : TestLogger<N>::streams_) {
+      for (auto pStrm : TestLogger<T>::streams_) {
         (*pStrm) << msg;
       }
     }
   }
   /*-- write log message to all channels --*/
-  template<size_t N, Level L>
-  void QTestLogger<N, L>::corePost(const std::string& msg) {
+  template<typename T>
+  void QTestLogger<T>::corePost(const T& msg) {
     this->composite_ = this->prefix_ + msg + this->suffix_;
     writeQ_.enQ(this->composite_);
   }
   /*-- write log message to all channels --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& QTestLogger<N, L>::post(const std::string& msg) {
+  template<typename T>
+  void QTestLogger<T>::post(const T& msg) {
     corePost(msg);
-    return *this;
   }
   /*-- write dated log message to all channels --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& QTestLogger<N, L>::postDated(const std::string& msg) {
+  template<typename T>
+  void QTestLogger<T>::postDated(const T& msg) {
     this->composite_ = msg + " : " + this->dt.now();
     corePost(this->composite_);
-    return *this;
   }
 
   /////////////////////////////////////////////////
   // Logger factory functions
-  // - return pointer or reference typed as IQTestLogger<N> interface
+  // - return pointer or reference typed as IQTestLogger<T> interface
 
   /*-- return std::unique_ptr<IQTestLogger> bound to a new instance --*/
-  template<size_t N = 0, Level L = Level::all>
-  inline std::unique_ptr<IQTestLogger<N, L>> createQLogger(std::ostream* pStrm = &std::cout) {
-    auto pQLogger = std::unique_ptr<QTestLogger<N, L>>(new QTestLogger<N>());
+  template<typename T = std::string>
+  inline std::unique_ptr<IQTestLogger<T>> createQLogger(std::ostream* pStrm = &std::cout) {
+    auto pQLogger = std::unique_ptr<QTestLogger<T>>(new QTestLogger<T>());
     pQLogger->addStream(pStrm);
     return pQLogger;
   }
   /*-- return reference to single static instance of logger --*/
-  template<size_t N = 0, Level L = Level::all>
-  inline IQTestLogger<N, L>& getSingletonQLogger(std::ostream* pStrm = &std::cout) {
-    static QTestLogger<N, L> logger;
+  template<typename T = std::string>
+  inline IQTestLogger<T>& getSingletonQLogger(std::ostream* pStrm = &std::cout) {
+    static QTestLogger<T> logger;
     if (logger.streamCount() == 0)
       logger.addStream(pStrm);
     return logger;

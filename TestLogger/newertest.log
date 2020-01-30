@@ -1,2 +1,5 @@
 
   posting after leaving addStream with unique_ptr scope
+  
+  -- show QLogger type --
+  N = 0, L = Level::all

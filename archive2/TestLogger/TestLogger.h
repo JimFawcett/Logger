@@ -10,7 +10,7 @@
    Package provides ITestLogger interface, TestLogger class, and two factories:
    - Write log messages to multiple streams
    - Accept strings or messages convertible to string
-   - TestLogger<N> provides:
+   - TestLogger<T> provides:
      - post(msg) and postDated(msg)
      - addStream(pStrm), removeStream(pStrm), streamCount()
      - clear()
@@ -48,32 +48,27 @@
 #include <memory>
 
 namespace Test {
-
   /////////////////////////////////////////////////////////
   // TestLogger class
   // - note virtual public inheritance
 
-  template<size_t N = 0, Level L = Level::all>
-  class TestLogger : virtual public ITestLogger<N, L> {
+  template<typename T = std::string>
+  class TestLogger : virtual public ITestLogger<T> {
   public:
     using Streams = std::vector<std::ostream*>;
 
     TestLogger() {}
-    TestLogger(std::ostream* pStrm) {
-      addStream(pStrm);
-    }
     virtual ~TestLogger();
     virtual void addStream(std::ostream* pOstream) override;
     virtual bool removeStream(std::ostream* pStrm) override;
     virtual void clear() override;
     virtual size_t streamCount() override;
-    virtual ITestLogger<N, L>& post(const std::string& msg) override;
-    virtual ITestLogger<N, L>& postDated(const std::string& msg) override;
-    virtual ITestLogger<N, L>& setPrefix(const std::string& prefix) override;
-    virtual ITestLogger<N, L>& setSuffix(const std::string& suffix) override;
-    virtual std::string type() override;
+    virtual void post(const T& msg) override;
+    virtual void postDated(const T& msg) override;
+    virtual void setPrefix(const std::string& prefix) override;
+    virtual void setSuffix(const std::string& suffix) override;
   protected:
-    void corePost(const std::string& msg);
+    void corePost(const T& msg);
     Streams streams_;
     std::string prefix_ = "\n  ";
     std::string suffix_ = "";
@@ -82,18 +77,18 @@ namespace Test {
   };
 
   /*-- remove all streams, closing file streams --*/
-  template<size_t N, Level L>
-  TestLogger<N, L>::~TestLogger() {
+  template<typename T>
+  TestLogger<T>::~TestLogger() {
     clear();
   }
   /*-- add ostream pointer, opens new log channel --*/
-  template<size_t N, Level L>
-  void TestLogger<N, L>::addStream(std::ostream* pOstream) {
+  template<typename T>
+  void TestLogger<T>::addStream(std::ostream* pOstream) {
     streams_.push_back(pOstream);
   }
   /*-- remove ostream pointer, closes log channel --*/
-  template<size_t N, Level L>
-  bool TestLogger<N, L>::removeStream(std::ostream* pStrm) {
+  template<typename T>
+  bool TestLogger<T>::removeStream(std::ostream* pStrm) {
     try {
       std::ofstream* pFile = dynamic_cast<std::ofstream*>(pStrm);
       if (pFile != nullptr) {
@@ -117,99 +112,67 @@ namespace Test {
     return true;
   }
   /*-- remove all streams, reset prefix and suffix --*/
-  template<size_t N, Level L>
-  void TestLogger<N, L>::clear() {
+  template<typename T>
+  void TestLogger<T>::clear() {
     for (auto pStrm : streams_)
       removeStream(pStrm);
     prefix_ = "\n  ";
     suffix_ = "";
   }
   /*-- return number of open log channels --*/
-  template<size_t N, Level L>
-  size_t TestLogger<N, L>::streamCount() {
+  template<typename T>
+  size_t TestLogger<T>::streamCount() {
     return streams_.size();
   }
   /*-- private write log message to all channels --*/
-  template<size_t N, Level L>
-  void TestLogger<N, L>::corePost(const std::string& msg) {
-    if (levelValue(L) & levelValue(logLevel)) {
-      composite_ = prefix_ + msg + suffix_;
-      for (auto pStrm : streams_) {
-        (*pStrm) << composite_;
-      }
+  template<typename T>
+  void TestLogger<T>::corePost(const T& msg) {
+    composite_ = prefix_ + msg + suffix_;
+    for (auto pStrm : streams_) {
+      (*pStrm) << composite_;
     }
   }
   /*-- write log message to all channels --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& TestLogger<N, L>::post(const std::string& msg) {
+  template<typename T>
+  void TestLogger<T>::post(const T& msg) {
     corePost(msg);
-    return *this;
   }
   /*-- write dated log message to all channels --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& TestLogger<N, L>::postDated(const std::string& msg) {
+  template<typename T>
+  void TestLogger<T>::postDated(const T& msg) {
     composite_ = msg + " : " + dt.now();
     corePost(composite_);
-    return *this;
   }
   /*-- set new message prefix --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& TestLogger<N, L>::setPrefix(const std::string& prefix) {
+  template<typename T>
+  void TestLogger<T>::setPrefix(const std::string& prefix) {
     prefix_ = prefix;
-    return *this;
   }
   /*-- set new message suffix --*/
-  template<size_t N, Level L>
-  ITestLogger<N, L>& TestLogger<N, L>::setSuffix(const std::string& suffix) {
+  template<typename T>
+  void TestLogger<T>::setSuffix(const std::string& suffix) {
     suffix_ = suffix;
-    return *this;
-  }
-  /*-- set new message suffix --*/
-  template<size_t N, Level L>
-  std::string TestLogger<N, L>::type() {
-    return "N = " + std::to_string(N) + ", L = " + levelType(L);
   }
 
   /////////////////////////////////////////////////
   // Logger factory functions
-  // - return pointer or reference typed as ITestLogger<N> interface
+  // - return pointer or reference typed as ITestLogger<T> interface
 
   /*-- return std::unique_ptr<IQTestLogger> bound to a new instance --*/
 
-  template<size_t N = 0, Level L = Level::all>
-  inline std::unique_ptr<ITestLogger<N, L>> createLogger(std::ostream* pStrm = &std::cout) {
-    auto pLogger = std::unique_ptr<TestLogger<N, L>>(new TestLogger<N, L>());
+  template<typename T = std::string>
+  inline std::unique_ptr<ITestLogger<T>> createLogger(std::ostream* pStrm = &std::cout) {
+    auto pLogger = std::unique_ptr<TestLogger<std::string>>(new TestLogger<std::string>());
     pLogger->addStream(pStrm);
     return pLogger;
   }
-  /*-- return reference to static instance --*/
 
-  template<size_t N = 0, Level L = Level::all>
-  inline ITestLogger<N, L>& getSingletonLogger(std::ostream* pStrm = &std::cout) {
-    static TestLogger<N, L> logger;
+  template<typename T = std::string>
+  inline ITestLogger<T>& getSingletonLogger(std::ostream* pStrm = &std::cout) {
+    static TestLogger<T> logger;
     if (logger.streamCount() == 0)
       logger.addStream(pStrm);
     return logger;
-  }
-
-  /////////////////////////////////////////////////
-  // Common Logger Definitions
-
-  template<size_t N = 0>
-  using DebugLogger = TestLogger<N, Level::debug>;
-  template<size_t N = 0>
-  using DemoLogger = TestLogger<N, Level::demo>;
-  template<size_t N = 0>
-  using ResultsLogger = TestLogger <N, Level::results>;
-  template<size_t N = 0>
-  using AllLogger = TestLogger<N, Level::all>;
-
-  inline std::string makeTitle(const std::string& tl) {
-    return "\n  " + tl + "\n " + std::string(tl.size() + 2, '=');
-  }
-
-  inline std::string maketitle(const std::string& tl) {
-    return "\n  " + tl + "\n " + std::string(tl.size() + 2, '-');
   }
 
   /////////////////////////////////////////////////

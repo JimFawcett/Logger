@@ -14,19 +14,18 @@ int main() {
 
   using namespace Test;
 
-  logLevel = Level::all;  // This should be a program run invariant.
-                          // We will change here to test Level processing.
+  displayTitle("Testing Logger");
 
-  std::cout << makeTitle("Testing Logger");
-
-  TestLogger(&std::cout).post("-- logging to std::cout --");  // temporary logger
-  TestLogger logger(&std::cout);  // equivalent to TestLogger<0,Level::all> via default params
-  logger.postDated("Test log #1").post("first message").post("second message");
+  displayDemo("-- logging to std::cout --");
+  TestLogger<std::string> logger;
+  logger.addStream(&std::cout);
+  logger.postDated("Test log #1");
   logger.post("first message");
   logger.post("second message");
   logger.post("");
 
-  logger.setPrefix("\n  -- ").setSuffix(" --");
+  logger.setPrefix("\n  -- ");
+  logger.setSuffix(" --");
   logger.postDated("Test log #2");
   logger.post("a message");
   std::cout << "\n";
@@ -34,56 +33,16 @@ int main() {
   std::cout << "\n  logger has " << logger.streamCount() << " streams";
   logger.clear();
   std::cout << "\n  after clearing logger has " << logger.streamCount() << " streams";
+
+  displayDemo("\n  -- logging LogMessages --");
   logger.addStream(&std::cout);
-
-  logger.post("\n  -- testing level --");
-  DebugLogger<0> debugLogger;
-  debugLogger.addStream(&std::cout);
-  DemoLogger<0> demoLogger;
-  demoLogger.addStream(&std::cout);
-  ResultsLogger<0> resultsLogger;
-  resultsLogger.addStream(&std::cout);
-  using AllLogger = TestLogger<0, Level::all>;
-  AllLogger allLogger;
-  allLogger.addStream(&std::cout);
-
-  logLevel = Level::all;
-  logger.post("logLevel = " + levelType(logLevel));
-  debugLogger.post("debugLogger here");
-  demoLogger.post("demoLogger here");
-  resultsLogger.post("resultsLogger here");
-  allLogger.post("allLogger here");
-
-  logLevel = Level::debug;
-  logger.post("logLevel = " + levelType(logLevel));
-  debugLogger.post("debugLogger here");
-  demoLogger.post("demoLogger here");
-  resultsLogger.post("resultsLogger here");
-  allLogger.post("allLogger here");
-
-  logLevel = Level::demo;
-  logger.post("logLevel = " + levelType(logLevel));
-  debugLogger.post("debugLogger here");
-  demoLogger.post("demoLogger here");
-  resultsLogger.post("resultsLogger here");
-  allLogger.post("allLogger here");
-
-  logLevel = Level::results;
-  logger.post("logLevel = " + levelType(logLevel));
-  debugLogger.post("debugLogger here");
-  demoLogger.post("demoLogger here");
-  resultsLogger.post("resultsLogger here");
-  allLogger.post("allLogger here");
-  logLevel = Level::all;
-
-  logger.post("\n  -- logging LogMessages --");
   LogMessage msg("github message");
   logger.postDated(msg);
   msg.clear();
   msg.add("send message").add("/with another part").add("/and still another part");
   logger.post(msg);
 
-  logger.post("\n  -- logging to file stream --");
+  displayDemo("\n  -- logging to file stream --");
   std::ofstream oStrm;
   if (openFile("test.log", &oStrm)) {
     std::cout << "\n  opened file \"test.log\"";
@@ -91,15 +50,12 @@ int main() {
     logger.postDated("logging to std::cout and file test.log");
     logger.post("end of test log");
   }
-  msg.clear();
-  msg.add("\n  after leaving openFile scope, streamCount = ");
-  msg.add(std::to_string(logger.streamCount()));
-  logger.post(msg);
+  std::cout << "\n  after leaving openFile scope, streamCount = " << logger.streamCount();
   logger.post("posting after leaving addStream scope");
   logger.clear();
 
+  displayDemo("\n  -- logging to std::cout and two file streams --");
   logger.addStream(&std::cout);
-  logger.post("\n  -- logging to std::cout and two file streams --");
   std::ofstream strm2;
   if (openFile("newtest.log", &strm2)) {
     logger.addStream(&strm2);
@@ -113,45 +69,49 @@ int main() {
   logger.setPrefix("\n  ");
   logger.setSuffix("");
   logger.post("posting after leaving addStream with unique_ptr scope");
+  logger.clear();
+  std::cout << "\n";
 
-  logger.post("\n-- show logger type --");
-  logger.post(logger.type() + "\n");
-  logger.clear();  // should see two files close
-
-  logger.addStream(&std::cout);
-  logger.post("\n-- use factory and interface --");
-  auto pLogger = createLogger<1,Level::results>();
+  displayDemo("-- use factory and interface --");
+  auto pLogger = createLogger();
   pLogger->postDated("factory logger log");
   pLogger->post("log message #1");
-  pLogger->setPrefix("\n --").setSuffix(" --");
+  pLogger->setPrefix("\n --");
+  pLogger->setSuffix(" --");
   pLogger->post("message with new prefix and suffix");
   putline();
 
-  logger.post(makeTitle("Testing QLogger"));
-  logger.post("-- logging to std::cout --");
-  QTestLogger<0> qlogger;
-  qlogger.addStream(&std::cout);
-  qlogger.postDated("Test log #1").post("first message");
-  qlogger.post("second message").post("");
+  displayTitle("Testing QLogger");
 
-  qlogger.setPrefix("\n  -- ").setSuffix(" --");
+  displayDemo("-- logging to std::cout --");
+  QTestLogger<std::string> qlogger;
+  qlogger.addStream(&std::cout);
+  qlogger.postDated("Test log #1");
+  qlogger.post("first message");
+  qlogger.post("second message");
+  qlogger.post("");
+
+  qlogger.setPrefix("\n  -- ");
+  qlogger.setSuffix(" --");
   qlogger.postDated("Test log #2");
   qlogger.post("a message");
-  qlogger.wait();  // without this wait() some qlogger posts may arrive after the std::cout, below
+  qlogger.wait();
+  std::cout << "\n";
 
   std::cout << "\n  qlogger has " << qlogger.streamCount() << " streams";
   qlogger.clear();
   std::cout << "\n  after clearing qlogger has " << qlogger.streamCount() << " streams";
 
+  displayDemo("\n  -- logging LogMessages --");
   qlogger.addStream(&std::cout);
-  qlogger.post("\n  -- logging LogMessages --");
   LogMessage qMsg("github message");
   qlogger.postDated(qMsg);
   qMsg.clear();
   qMsg.add("send message").add("/with another part").add("/and still another part");
   qlogger.post(qMsg);
+  qlogger.wait();
 
-  qlogger.post("\n  -- logging to file stream --");
+  displayDemo("\n  -- logging to file stream --");
   std::ofstream oQStrm;
   if (openFile("test.log", &oQStrm)) {
     std::cout << "\n  opened file \"test.log\"";
@@ -159,16 +119,13 @@ int main() {
     qlogger.postDated("logging to std::cout and file test.log");
     qlogger.post("end of test log");
   }
-  //qlogger.wait();
-  qlogger.post(
-    "\n  after leaving openFile scope, streamCount = " + 
-    std::to_string(qlogger.streamCount())
-  );
+  qlogger.wait();
+  std::cout << "\n  after leaving openFile scope, streamCount = " << qlogger.streamCount();
   qlogger.post("posting after leaving addStream scope");
   qlogger.clear();
 
+  displayDemo("\n  -- logging to std::cout and two file streams --");
   qlogger.addStream(&std::cout);
-  qlogger.post("\n  -- logging to std::cout and two file streams --");
   std::ofstream qstrm2;
   if (openFile("newtest.log", &qstrm2)) {
     qlogger.addStream(&qstrm2);
@@ -179,33 +136,35 @@ int main() {
     if (pQStrm->good())
       qlogger.addStream(pQStrm.get());
   }
-  qlogger.setPrefix("\n  ").setSuffix("");
+  qlogger.setPrefix("\n  ");
+  qlogger.setSuffix("");
   qlogger.post("posting after leaving addStream with unique_ptr scope");
-  qlogger.post("\n  -- show QLogger type --");
-  qlogger.post(qlogger.type() + "\n");
   qlogger.clear();
+  std::cout << "\n";
 
+  displayDemo("-- use factory and interface --");
   auto pQlogger = createQLogger();
-  pQlogger->post("\n  -- use factory and interface --");
   pQlogger->postDated("factory Qlogger log");
   pQlogger->post("log message #1");
-  pQlogger->setPrefix("\n --").setSuffix(" --");
+  pQlogger->setPrefix("\n --");
+  pQlogger->setSuffix(" --");
   pQlogger->post("message with new prefix and suffix");
-  pQlogger->setPrefix("\n  ");
-  pQlogger->setSuffix("");
-  pQlogger->post("");
-  pQlogger->wait();  // need to ensure that pQlogger and qSlogger posts don't interleave
+  pQlogger->wait();
+  putline();
 
+  displayDemo("-- use singleton factory and interface --");
   auto& qSlogger = getSingletonQLogger();
-  qSlogger.post("-- use singleton factory and interface --");
   qSlogger.postDated("factory qSlogger log");
   qSlogger.post("log message #1");
-  qSlogger.setPrefix("\n --").setSuffix(" --");
+  qSlogger.setPrefix("\n --");
+  qSlogger.setSuffix(" --");
   qSlogger.post("message with new prefix and suffix");
   qSlogger.wait();
+  putline();
 
-  pQlogger->post("\n  -- use timer --");
-  pQlogger->setPrefix("\n  ").setSuffix("");
+  displayDemo("-- use timer --");
+  pQlogger->setPrefix("\n  ");
+  pQlogger->setSuffix("");
   std::ofstream tfstrm;
   openFile("timed.log", &tfstrm);
   pQlogger->addStream(&tfstrm);

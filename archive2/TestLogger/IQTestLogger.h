@@ -14,8 +14,8 @@
 // - note virtual public inheritance
 
 namespace Test {
-  template<size_t N, Level L>
-  struct IQTestLogger : virtual public ITestLogger<N,L> {
+  template<typename T = std::string>
+  struct IQTestLogger : virtual public ITestLogger<T> {
     virtual ~IQTestLogger() {};
     virtual void wait() = 0;
     virtual void start() = 0;

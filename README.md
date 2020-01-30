@@ -6,7 +6,7 @@ Send string messages to one or more std::iostreams concurrently.
 Provides two loggers, each with iterfaces and object factories:
 <ol>
     <li>
-        TestLogger&lt;Level&gt; - Level determinse whether msg is sent
+        TestLogger&lt;Level&gt; - Level determines whether msg is sent
         <ul>
             <li>
                 Leval:all
@@ -17,6 +17,8 @@ Provides two loggers, each with iterfaces and object factories:
             <li>
                 Level:results
         </ul>
+    <li>
+        logLevel is global invariant that posts compare to their logger level
     <li>
         ITestLogger&lt;Level&gt; - interface
     <li>

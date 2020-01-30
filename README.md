@@ -22,7 +22,7 @@ Provides two loggers, each with iterfaces and object factories:
     <li>
         ITestLogger&lt;Level&gt; - interface
     <li>
-        std::unique_ptr&gt;ITestLogger&lt;L&gt;&gt; createLogger()
+        std::unique_ptr&lt;ITestLogger&lt;L&gt;&gt; createLogger()
     <li>
         ITestLogger&gt;L&lt;&amp; getSingletonLogger&lt;N&gt;() - parameter N supports additional singletons
     <li>

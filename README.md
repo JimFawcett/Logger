@@ -24,7 +24,7 @@ Provides two loggers, each with iterfaces and object factories:
     <li>
         std::unique_ptr&lt;ITestLogger&lt;L&gt;&gt; createLogger()
     <li>
-        ITestLogger&gt;L&lt;&amp; getSingletonLogger&lt;N&gt;() - parameter N supports additional singletons
+        ITestLogger&lt;L&gt;&amp; getSingletonLogger&lt;N&gt;() - parameter N supports additional singletons
     <li>
         QTestLogger&lt;Level&gt; - writes to queue, child thread writes to streams
     <li>

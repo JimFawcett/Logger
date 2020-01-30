@@ -5,13 +5,10 @@ https://JimFawcett.github.io/Logger.html
 Send string messages to one or more std::iostreams concurrently.
 Provides two loggers, each with iterfaces and object factories:
 1. TestLogger&lt;Level&gt; - Level determinse whether msg is sent
-  a. Leval:all
-  
-  b. Leval:debug
-  
-  c. Level:demo
-  
-  d. Level:results
+    a. Leval:all
+    b. Leval:debug
+    c. Level:demo
+    d. Level:results
   
 2. ITestLogger&lt;Level&gt; - interface
 

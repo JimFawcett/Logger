@@ -1,7 +1,5 @@
 
-  
-  -- logging to file stream --
-  logging to std::cout and file test.log : Thu Jan 30 12:27:59 2020
+  logging to std::cout and file test.log : Wed Jan 29 20:28:11 2020
   end of test log
   
   after leaving openFile scope, streamCount = 2

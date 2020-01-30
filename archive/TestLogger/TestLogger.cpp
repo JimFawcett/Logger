@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////
 // TestLogger.cpp - Logging to multiple streams                        //
 //                  Demonstrates TestLogger<T> and QTestLogger<T>      //
-// ver 1.1                                                             //
+//                                                                     //
 // Jim Fawcett, Emeritus Teaching Professor, EECS, Syracuse University //
 /////////////////////////////////////////////////////////////////////////
 
@@ -37,12 +37,13 @@ int main() {
   logger.addStream(&std::cout);
 
   logger.post("\n  -- testing level --");
-  DebugLogger debugLogger;
+  DebugLogger<0> debugLogger;
   debugLogger.addStream(&std::cout);
-  DemoLogger demoLogger;
+  DemoLogger<0> demoLogger;
   demoLogger.addStream(&std::cout);
-  ResultsLogger resultsLogger;
+  ResultsLogger<0> resultsLogger;
   resultsLogger.addStream(&std::cout);
+  using AllLogger = TestLogger<0, Level::all>;
   AllLogger allLogger;
   allLogger.addStream(&std::cout);
 
@@ -114,12 +115,12 @@ int main() {
   logger.post("posting after leaving addStream with unique_ptr scope");
 
   logger.post("\n-- show logger type --");
-  logger.post(logger.level() + "\n");
+  logger.post(logger.type() + "\n");
   logger.clear();  // should see two files close
 
   logger.addStream(&std::cout);
   logger.post("\n-- use factory and interface --");
-  auto pLogger = createLogger<Level::results>();
+  auto pLogger = createLogger<1,Level::results>();
   pLogger->postDated("factory logger log");
   pLogger->post("log message #1");
   pLogger->setPrefix("\n --").setSuffix(" --");
@@ -128,7 +129,7 @@ int main() {
 
   logger.post(makeTitle("Testing QLogger"));
   logger.post("-- logging to std::cout --");
-  QTestLogger qlogger;
+  QTestLogger<0> qlogger;
   qlogger.addStream(&std::cout);
   qlogger.postDated("Test log #1").post("first message");
   qlogger.post("second message").post("");
@@ -181,17 +182,12 @@ int main() {
   qlogger.setPrefix("\n  ").setSuffix("");
   qlogger.post("posting after leaving addStream with unique_ptr scope");
   qlogger.post("\n  -- show QLogger type --");
-  qlogger.post(qlogger.level() + "\n");
+  qlogger.post(qlogger.type() + "\n");
   qlogger.clear();
-  
+
   auto pQlogger = createQLogger();
   pQlogger->post("\n  -- use factory and interface --");
-  pQlogger->post("demonstrate that successive calls to createQlogger generate different loggers");
-  pQlogger->wait();
-  std::cout << "\n  address of pQlogger = " << reinterpret_cast<long>(pQlogger.get());
-  auto pQlogger1 = createQLogger();
-  std::cout << "\n  address of pQlogger1 = " << reinterpret_cast<long>(pQlogger1.get());
-  pQlogger->postDated("\n  factory Qlogger log");
+  pQlogger->postDated("factory Qlogger log");
   pQlogger->post("log message #1");
   pQlogger->setPrefix("\n --").setSuffix(" --");
   pQlogger->post("message with new prefix and suffix");
@@ -202,16 +198,7 @@ int main() {
 
   auto& qSlogger = getSingletonQLogger();
   qSlogger.post("-- use singleton factory and interface --");
-  qSlogger.post("demonstrate that getSingletonQLogger<0> and getSingletonQLogger<1> generate different loggers");
-  auto& qSlogger1 = getSingletonQLogger<1>();
-  auto& qSlogger2 = getSingletonQLogger<1>();
-  qSlogger.wait();
-  std::cout << "\n  address of qSlogger<0> = " << reinterpret_cast<long>(&qSlogger);
-  std::cout << "\n  address of qSlogger<1> = " << reinterpret_cast<long>(&qSlogger1);
-  std::cout << "\n  demonstrate that successive calls to getSingletonQLogger<1> return same logger";
-  std::cout << "\n  address of 1st qSlogger<1> = " << reinterpret_cast<long>(&qSlogger1);
-  std::cout << "\n  address of 2nd qSlogger<1> = " << reinterpret_cast<long>(&qSlogger2);
-  qSlogger.postDated("\n  factory qSlogger log");
+  qSlogger.postDated("factory qSlogger log");
   qSlogger.post("log message #1");
   qSlogger.setPrefix("\n --").setSuffix(" --");
   qSlogger.post("message with new prefix and suffix");

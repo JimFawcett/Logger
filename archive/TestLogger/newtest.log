@@ -2,7 +2,7 @@
   posting after leaving addStream with unique_ptr scope
   
 -- show logger type --
-  Level::all
+  N = 0, L = Level::all
 
   
 -- use factory and interface --

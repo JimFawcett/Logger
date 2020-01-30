@@ -1,7 +1,0 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets(1875,5): warning : The referenced project '..\DateTime\DateTime.vcxproj' does not exist.
-C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\Microsoft.Common.CurrentVersion.targets(1875,5): warning : The referenced project '..\FileUtilities\FileUtilities.vcxproj' does not exist.
-  SingletonLogger.cpp
-  SingletonLoggerFactory.cpp
-C:\github\JimFawcett\Logger\SingletonLogger.h(45,10): error C1083:  Cannot open include file: '../DateTime/DateTime.h': No such file or directory
-  Generating Code...
-C:\github\JimFawcett\Logger\SingletonLogger.h(45,10): error C1083:  Cannot open include file: '../DateTime/DateTime.h': No such file or directory

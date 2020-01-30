@@ -1,7 +1,7 @@
 #pragma once
 /////////////////////////////////////////////////////////////////////////
 // QTestLogger.h - Logs to multiple streams using post queue           //
-// ver 1.1                                                             //
+//                                                                     //
 // Jim Fawcett, Emeritus Teaching Professor, EECS, Syracuse University //
 /////////////////////////////////////////////////////////////////////////
 /*
@@ -39,9 +39,6 @@
 
    Maintenance History:
   ----------------------
-   ver 1.1 : 30 Jan 2020
-   - removed template argument size_t N on loggers
-     That argument remains for factories so we can more than one "singleTon" logger
    ver 1.0 : 26 Jan 2020
    - first release, 
      starting new version change due to redesign
@@ -86,15 +83,15 @@ namespace Test {
   /////////////////////////////////////////////////////////
   // QTestLogger class
 
-  template<Level L = Level::all>
-  class QTestLogger : public IQTestLogger<L>, public TestLogger<L> {
+  template<size_t N = 0, Level L = Level::all>
+  class QTestLogger : public IQTestLogger<N,L>, public TestLogger<N,L> {
   public:
 
     QTestLogger() {
-      wthread = std::move(std::thread(&QTestLogger<L>::writeThreadProc, this));
+      wthread = std::move(std::thread(&QTestLogger<N>::writeThreadProc, this));
     }
     QTestLogger(std::ostream& pStrm) {
-      wthread = std::move(std::thread(&QTestLogger<L>::writeThreadProc, this));
+      wthread = std::move(std::thread(&QTestLogger<N>::writeThreadProc, this));
       this->addStream(pStrm);
     }
     virtual ~QTestLogger();
@@ -103,8 +100,8 @@ namespace Test {
     virtual void stop();
     virtual double elapsedMicroseconds();
     virtual void clear() override;
-    virtual ITestLogger<L>& post(const std::string& msg) override;
-    virtual ITestLogger<L>& postDated(const std::string& msg) override;
+    virtual ITestLogger<N,L>& post(const std::string& msg) override;
+    virtual ITestLogger<N, L>& postDated(const std::string& msg) override;
   protected:
     void corePost(const std::string& msg);
     std::thread wthread;
@@ -113,70 +110,70 @@ namespace Test {
   };
 
   /*-- remove all streams, closing file streams --*/
-  template<Level L>
-  QTestLogger<L>::~QTestLogger() {
+  template<size_t N, Level L>
+  QTestLogger<N, L>::~QTestLogger() {
     writeQ_.enQ("stop");
     if (wthread.joinable())
       wthread.join();
     clear();
   }
   /*-- wait for writeQ to empty --*/
-  template<Level L>
-  void QTestLogger<L>::wait() {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::wait() {
     while (writeQ_.size() > 0)
       std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   /*-- start timer --*/
-  template<Level L>
-  void QTestLogger<L>::start() {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::start() {
     this->dt.start();
   }
   /*-- stop timer --*/
-  template<Level L>
-  void QTestLogger<L>::stop() {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::stop() {
     this->dt.stop();
   }
   /*-- timer elapsed microseconds --*/
-  template<Level L>
-  double QTestLogger<L>::elapsedMicroseconds() {
+  template<size_t N, Level L>
+  double QTestLogger<N, L>::elapsedMicroseconds() {
     return this->dt.elapsedMicroseconds();
   }
   /*-- remove all streams, reset prefix and suffix --*/
-  template<Level L>
-  void QTestLogger<L>::clear() {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::clear() {
     wait();
-    for (auto pStrm : TestLogger<L>::streams_)
+    for (auto pStrm : TestLogger<N>::streams_)
       this->removeStream(pStrm);
-    TestLogger<L>::prefix_ = "\n  ";
-    TestLogger<L>::suffix_ = "";
+    TestLogger<N>::prefix_ = "\n  ";
+    TestLogger<N>::suffix_ = "";
   }
   /*-- function executed by write thread --*/
-  template<Level L>
-  void QTestLogger<L>::writeThreadProc() {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::writeThreadProc() {
     while (true) {
       std::string msg = writeQ_.deQ();
       if (msg == "stop")
         break;
-      for (auto pStrm : TestLogger<L>::streams_) {
+      for (auto pStrm : TestLogger<N>::streams_) {
         (*pStrm) << msg;
       }
     }
   }
   /*-- write log message to all channels --*/
-  template<Level L>
-  void QTestLogger<L>::corePost(const std::string& msg) {
+  template<size_t N, Level L>
+  void QTestLogger<N, L>::corePost(const std::string& msg) {
     this->composite_ = this->prefix_ + msg + this->suffix_;
     writeQ_.enQ(this->composite_);
   }
   /*-- write log message to all channels --*/
-  template<Level L>
-  ITestLogger<L>& QTestLogger<L>::post(const std::string& msg) {
+  template<size_t N, Level L>
+  ITestLogger<N, L>& QTestLogger<N, L>::post(const std::string& msg) {
     corePost(msg);
     return *this;
   }
   /*-- write dated log message to all channels --*/
-  template<Level L>
-  ITestLogger<L>& QTestLogger<L>::postDated(const std::string& msg) {
+  template<size_t N, Level L>
+  ITestLogger<N, L>& QTestLogger<N, L>::postDated(const std::string& msg) {
     this->composite_ = msg + " : " + this->dt.now();
     corePost(this->composite_);
     return *this;
@@ -187,22 +184,16 @@ namespace Test {
   // - return pointer or reference typed as IQTestLogger<N> interface
 
   /*-- return std::unique_ptr<IQTestLogger> bound to a new instance --*/
-  template<Level L = Level::all>
-  inline std::unique_ptr<IQTestLogger<L>> createQLogger(std::ostream* pStrm = &std::cout) {
-    auto pQLogger = std::unique_ptr<QTestLogger<L>>(new QTestLogger<L>());
+  template<size_t N = 0, Level L = Level::all>
+  inline std::unique_ptr<IQTestLogger<N, L>> createQLogger(std::ostream* pStrm = &std::cout) {
+    auto pQLogger = std::unique_ptr<QTestLogger<N, L>>(new QTestLogger<N>());
     pQLogger->addStream(pStrm);
     return pQLogger;
   }
-  /*-----------------------------------------------------
-    return reference to single static instance of logger
-    - returns reference to same logger provided that N
-      is the same for all calls
-    - getSingletonQLogger<M> returns different logger
-      than getSingletonQLogger<N> where M != N
-  */
+  /*-- return reference to single static instance of logger --*/
   template<size_t N = 0, Level L = Level::all>
-  inline IQTestLogger<L>& getSingletonQLogger(std::ostream* pStrm = &std::cout) {
-    static QTestLogger<L> logger;
+  inline IQTestLogger<N, L>& getSingletonQLogger(std::ostream* pStrm = &std::cout) {
+    static QTestLogger<N, L> logger;
     if (logger.streamCount() == 0)
       logger.addStream(pStrm);
     return logger;

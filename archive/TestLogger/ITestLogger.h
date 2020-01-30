@@ -1,7 +1,7 @@
 #pragma once
 /////////////////////////////////////////////////////////////////////////
 // ITestLogger.h - Logger interface                                    //
-// ver 1.1                                                             //
+//                                                                     //
 // Jim Fawcett, Emeritus Teaching Professor, EECS, Syracuse University //
 /////////////////////////////////////////////////////////////////////////
 
@@ -35,17 +35,17 @@ namespace Test {
 
   Level logLevel = Level::all;
 
-  template<Level L>
+  template<size_t N, Level L>
   struct ITestLogger {
     virtual ~ITestLogger() {}
     virtual void addStream(std::ostream* pOstream) = 0;
     virtual bool removeStream(std::ostream* pOstream) = 0;
     virtual size_t streamCount() = 0;
-    virtual ITestLogger<L>& post(const std::string& msg) = 0;
-    virtual ITestLogger<L>& postDated(const std::string& msg) = 0;
-    virtual ITestLogger<L>& setPrefix(const std::string& prefix) = 0;
-    virtual ITestLogger<L>& setSuffix(const std::string& suffix) = 0;
+    virtual ITestLogger<N,L>& post(const std::string& msg) = 0;
+    virtual ITestLogger<N, L>& postDated(const std::string& msg) = 0;
+    virtual ITestLogger<N, L>& setPrefix(const std::string& prefix) = 0;
+    virtual ITestLogger<N, L>& setSuffix(const std::string& suffix) = 0;
     virtual void clear() = 0;
-    virtual std::string level() = 0;
+    virtual std::string type() = 0;
   };
 }

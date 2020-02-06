@@ -187,8 +187,8 @@ namespace Test {
   // - return pointer or reference typed as IQTestLogger<N> interface
 
   /*-- return std::unique_ptr<IQTestLogger> bound to a new instance --*/
-  template<Level L = Level::all>
-  inline std::unique_ptr<IQTestLogger<L>> createQLogger(std::ostream* pStrm = &std::cout) {
+  template<Level L>
+  inline std::unique_ptr<IQTestLogger<L>> createQLogger(std::ostream* pStrm) {
     auto pQLogger = std::unique_ptr<QTestLogger<L>>(new QTestLogger<L>());
     pQLogger->addStream(pStrm);
     return pQLogger;
@@ -200,8 +200,8 @@ namespace Test {
     - getSingletonQLogger<M> returns different logger
       than getSingletonQLogger<N> where M != N
   */
-  template<size_t N = 0, Level L = Level::all>
-  inline IQTestLogger<L>& getSingletonQLogger(std::ostream* pStrm = &std::cout) {
+  template<size_t N, Level L>
+  inline IQTestLogger<L>& getSingletonQLogger(std::ostream* pStrm) {
     static QTestLogger<L> logger;
     if (logger.streamCount() == 0)
       logger.addStream(pStrm);

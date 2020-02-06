@@ -7,6 +7,7 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
 
 namespace Test {
 
@@ -48,4 +49,10 @@ namespace Test {
     virtual void clear() = 0;
     virtual std::string level() = 0;
   };
+
+  template<Level L = Level::all>
+  inline std::unique_ptr<ITestLogger<L>> createLogger(std::ostream* pStrm = &std::cout);
+
+  template<size_t N = 0, Level L = Level::all>
+  inline ITestLogger<L>& getSingletonLogger(std::ostream* pStrm = &std::cout);
 }

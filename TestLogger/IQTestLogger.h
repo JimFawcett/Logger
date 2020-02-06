@@ -23,4 +23,10 @@ namespace Test {
     virtual void stop() = 0;
     virtual double elapsedMicroseconds() = 0;
   };
+
+  template<Level L = Level::all>
+  inline std::unique_ptr<IQTestLogger<L>> createQLogger(std::ostream* pStrm = &std::cout);
+
+  template<size_t N = 0, Level L = Level::all>
+  inline IQTestLogger<L>& getSingletonQLogger(std::ostream* pStrm = &std::cout);
 }

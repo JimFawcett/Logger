@@ -179,8 +179,8 @@ namespace Test {
 
   /*-- return std::unique_ptr<IQTestLogger> bound to a new instance --*/
 
-  template<Level L = Level::all>
-  inline std::unique_ptr<ITestLogger<L>> createLogger(std::ostream* pStrm = &std::cout) {
+  template<Level L>
+  inline std::unique_ptr<ITestLogger<L>> createLogger(std::ostream* pStrm) {
     auto pLogger = std::unique_ptr<TestLogger<L>>(new TestLogger<L>());
     pLogger->addStream(pStrm);
     return pLogger;
@@ -192,8 +192,8 @@ namespace Test {
     - getSingletonLogger<M> returns different logger
       than getSingletonLogger<N> where M != N
   */
-  template<size_t N = 0, Level L = Level::all>
-  inline ITestLogger<L>& getSingletonLogger(std::ostream* pStrm = &std::cout) {
+  template<size_t N, Level L>
+  inline ITestLogger<L>& getSingletonLogger(std::ostream* pStrm) {
     static TestLogger<L> logger;
     if (logger.streamCount() == 0)
       logger.addStream(pStrm);
